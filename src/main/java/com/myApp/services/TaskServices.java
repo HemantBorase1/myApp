@@ -1,78 +1,84 @@
 package com.myApp.services;
 
+import com.myApp.dto.TaskRequest;
+import com.myApp.dto.TaskResponse;
 import com.myApp.exception.TaskNotFoundException;
 import com.myApp.model.Task;
+import com.myApp.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class TaskServices {
 
-    private final List<Task> tasks = new ArrayList<>();
+    private final TaskRepository taskRepository;
 
-    public TaskServices() {
-        tasks.add(new Task(
-                1L,
-                "Learn Spring Boot",
-                "Learn REST APIs",
-                false
-        ));
-
-        tasks.add(new Task(
-                2L,
-                "Build Task Manager",
-                "Create CRUD APIs",
-                false
-        ));
+    public TaskServices(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
     }
 
-    public List<Task> getTasks() {
-        return tasks;
+    public List<TaskResponse> getTasks() {
+
+        return taskRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
     }
 
-    public Task getTaskById(Long id) {
+    public TaskResponse getTaskById(Long id) {
 
-        for (Task task : tasks) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
 
-            if (id!=null && id.equals(task.getId())) {
-                return task;
-            }
+        return convertToResponse(task);
+    }
+
+
+    public TaskResponse createTask(TaskRequest taskRequest) {
+
+        Task task = new Task();
+
+        task.setTitle(taskRequest.getTitle());
+        task.setDescription(taskRequest.getDescription());
+        task.setCompleted(taskRequest.isCompleted());
+
+        Task savedTask = taskRepository.save(task);
+
+        return convertToResponse(savedTask);
+    }
+
+    public TaskResponse updateTask(Long id, TaskRequest taskRequest) {
+
+        Task existingTask = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
+        existingTask.setTitle(taskRequest.getTitle());
+        existingTask.setDescription(taskRequest.getDescription());
+        existingTask.setCompleted(taskRequest.isCompleted());
+
+        Task updatedTask = taskRepository.save(existingTask);
+
+        return convertToResponse(updatedTask);
+    }
+
+    public boolean deleteTask(Long id) {
+
+        if (!taskRepository.existsById(id)) {
+            return false;
         }
 
-        throw new TaskNotFoundException(id);
+        taskRepository.deleteById(id);
+
+        return true;
     }
-    public Task updateTask(Long id, Task updatedTask) {
+    private TaskResponse convertToResponse(Task task) {
 
-        for (Task task : tasks) {
-
-            if (id != null && id.equals(task.getId())) {
-
-                task.setTitle(updatedTask.getTitle());
-                task.setDescription(updatedTask.getDescription());
-                task.setCompleted(updatedTask.isCompleted());
-
-                return task;
-            }
-        }
-
-        return null;
-    }
-
-    public boolean deleteTask(Long id){
-        for(Task task:tasks){
-            if(id!=null && id.equals(task.getId())){
-                tasks.remove(task);
-                return true;
-            }
-        }
-        return false;
-    }
-    public Task createTask(Task task) {
-        task.setId((long) (tasks.size() + 1));
-        tasks.add(task);
-
-        return task;
+        return new TaskResponse(
+                task.getId(),
+                task.getTitle(),
+                task.getDescription(),
+                task.isCompleted()
+        );
     }
 }

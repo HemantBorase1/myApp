@@ -1,8 +1,10 @@
 package com.myApp.Controller;
 
+import com.myApp.dto.TaskRequest;
+import com.myApp.dto.TaskResponse;
 import com.myApp.model.Task;
 import com.myApp.services.TaskServices;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,45 +20,38 @@ public class TaskController {
     }
 
     @GetMapping("/api/tasks")
-    public List<Task> getTasks() {
+    public List<TaskResponse> getTasks() {
         return taskService.getTasks();
     }
 
     @GetMapping("/api/tasks/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-
-        Task task = taskService.getTaskById(id);
-
-        return ResponseEntity.ok(task);
+    public TaskResponse getTaskById(@PathVariable Long id) {
+        return taskService.getTaskById(id);
     }
 
     @PostMapping("/api/tasks")
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+    public TaskResponse createTask(
+            @Valid @RequestBody TaskRequest taskRequest) {
 
-        Task createdTask = taskService.createTask(task);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(createdTask);
+        return taskService.createTask(taskRequest);
     }
-
     @PutMapping("/api/tasks/{id}")
-    public Task updateTask(
+    public TaskResponse updateTask(
             @PathVariable Long id,
-            @RequestBody Task task) {
+            @Valid @RequestBody TaskRequest taskRequest) {
 
-        return taskService.updateTask(id, task);
+        return taskService.updateTask(id, taskRequest);
     }
 
     @DeleteMapping("/api/tasks/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public String deleteTask(@PathVariable Long id) {
 
         boolean deleted = taskService.deleteTask(id);
 
         if (!deleted) {
-            return ResponseEntity.notFound().build();
+            return "Task not found";
         }
 
-        return ResponseEntity.noContent().build();
+        return "Task deleted successfully";
     }
 }
