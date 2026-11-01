@@ -17,8 +17,8 @@
 
 The technologies and tools used in this project include:
 
-- **Frontend:** Add your frontend technology.
-- **Backend:** Add your backend technology.
+- **Frontend:** HTML,CSS, javascript
+- **Backend:** Java , JDBC , Hibernate
 - **Database:** Add your database (if applicable).
 - **Tools:** Git and GitHub.
 
